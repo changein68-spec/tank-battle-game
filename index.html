@@ -872,7 +872,7 @@ function loadLevel(levelIndex) {
 
   // 放置玩家
   const spawnCol = Math.floor(COLS / 2);
-  const spawnRow = ROWS - 2;
+  const spawnRow = ROWS - 4;  // row 22: 在基地(row 24-25)上方，避免出生即碰撞
   player = new PlayerTank(
     spawnCol * TILE_SIZE - (TILE_SIZE * 2 - 2) / 2 + TILE_SIZE / 2,
     spawnRow * TILE_SIZE
@@ -981,7 +981,7 @@ function checkBulletTankCollisions() {
             // 重生
             setTimeout(() => {
               const spawnCol = Math.floor(COLS / 2);
-              const spawnRow = ROWS - 2;
+              const spawnRow = ROWS - 4;  // row 22: 在基地上方
               player = new PlayerTank(
                 spawnCol * TILE_SIZE - (TILE_SIZE * 2 - 2) / 2 + TILE_SIZE / 2,
                 spawnRow * TILE_SIZE
