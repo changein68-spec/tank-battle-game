@@ -587,7 +587,7 @@ class PlayerTank extends Tank {
       }
     }
 
-    // 射击
+    // 射击（空格/J/鼠标左键）
     if ((keys['j'] || keys[' '] || keys['space']) && this.shootCooldown <= 0) {
       this.shoot();
     }
@@ -1322,17 +1322,38 @@ function gameLoop() {
 }
 
 // --- 输入处理 ---
+// 使用 e.code（物理键位码，不随键盘布局变化）做主要键位判断
+const CODE_MAP = {
+  'KeyW': 'w', 'KeyA': 'a', 'KeyS': 's', 'KeyD': 'd',
+  'ArrowUp': 'arrowup', 'ArrowDown': 'arrowdown',
+  'ArrowLeft': 'arrowleft', 'ArrowRight': 'arrowright',
+  'Space': 'space', 'KeyJ': 'j', 'KeyP': 'p',
+  'Enter': 'enter',
+};
+
 document.addEventListener('keydown', (e) => {
   initAudio();
 
-  const key = e.key.toLowerCase();
-  keys[key] = true;
+  // 防止方向键和空格导致页面滚动
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
+    e.preventDefault();
+  }
 
-  if (key === 'p' && (gameState === STATE.playing || gameState === STATE.paused)) {
+  // 用 e.code 做可靠映射
+  const codeKey = CODE_MAP[e.code];
+  if (codeKey) keys[codeKey] = true;
+
+  // 兼容 e.key（作为后备）
+  const key = (e.key || '').toLowerCase();
+  if (key) keys[key] = true;
+
+  // 暂停
+  if (e.code === 'KeyP' && (gameState === STATE.playing || gameState === STATE.paused)) {
     gameState = gameState === STATE.playing ? STATE.paused : STATE.playing;
   }
 
-  if (key === 'enter') {
+  // 开始/重新开始
+  if (e.code === 'Enter') {
     if (gameState === STATE.title || gameState === STATE.gameover) {
       currentLevel = 0;
       score = 0;
@@ -1340,19 +1361,20 @@ document.addEventListener('keydown', (e) => {
       loadLevel(0);
     }
   }
-
-  // 防止方向键滚动页面
-  if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(key)) {
-    e.preventDefault();
-  }
 });
 
 document.addEventListener('keyup', (e) => {
-  keys[e.key.toLowerCase()] = false;
+  // 用 e.code 做可靠映射
+  const codeKey = CODE_MAP[e.code];
+  if (codeKey) keys[codeKey] = false;
+
+  // 兼容 e.key
+  const key = (e.key || '').toLowerCase();
+  if (key) keys[key] = false;
 });
 
-// 点击画布开始（移动端支持）
-canvas.addEventListener('click', () => {
+// 点击画布开始 / 鼠标开火
+canvas.addEventListener('click', (e) => {
   initAudio();
   if (gameState === STATE.title || gameState === STATE.gameover) {
     currentLevel = 0;
@@ -1360,6 +1382,18 @@ canvas.addEventListener('click', () => {
     lives = 3;
     loadLevel(0);
   }
+});
+
+canvas.addEventListener('mousedown', () => {
+  if (gameState === STATE.playing) {
+    keys['space'] = true;
+    keys['j'] = true;
+  }
+});
+
+canvas.addEventListener('mouseup', () => {
+  keys['space'] = false;
+  keys['j'] = false;
 });
 
 // --- 移动端触控 ---
